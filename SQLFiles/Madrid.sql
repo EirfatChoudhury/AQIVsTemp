@@ -10,6 +10,7 @@ CREATE TABLE dbo.MadridYearlyAQ
 GO
 
 -- Create a Temporary Table which includes the PM10 levels from august of each year, where the station code is 28079024
+IF OBJECT_ID('TEMPTABLE', 'U') IS NOT NULL
 DROP TABLE TEMPTABLE
 SELECT YEAR("date") as "year", "PM10" INTO TEMPTABLE FROM madrid_2001
     WHERE 
@@ -36,3 +37,5 @@ INSERT INTO dbo.MadridYearlyAQ
 SELECT  [year], AVG(PM10) AS PM10_AVG FROM TEMPTABLE GROUP BY [year]
 SELECT * FROM dbo.MadridYearlyAQ
 ORDER BY 1
+
+DROP TABLE TEMPTABLE
