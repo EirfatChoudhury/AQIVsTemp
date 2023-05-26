@@ -5,26 +5,34 @@ GO
 CREATE TABLE dbo.MadridYearlyAQ
 (
     "YEAR" INT NOT NULL,
-    PM10 FLOAT NOT NULL,
+    AVG_PM10 FLOAT NOT NULL,
 );
 GO
 
+-- Create a Temporary Table which includes the PM10 levels from august of each year, where the station code is 28079024
+DROP TABLE TEMPTABLE
+SELECT YEAR("date") as "year", "PM10" INTO TEMPTABLE FROM madrid_2001
+    WHERE 
+        "station" = 28079024
+        AND MONTH("date") = 8
+        AND "PM10" IS NOT NULL
+DECLARE @YearValue INT
+DECLARE @YearString VARCHAR(MAX)
+DECLARE @stmt VARCHAR(MAX)
+SET @YearValue = 2002
+WHILE @YearValue < 2018
+    BEGIN
+        SET @YearString = CAST(@YearValue AS VARCHAR)
+        SET @stmt = 'INSERT INTO TEMPTABLE ("year", PM10) SELECT YEAR("date"), "PM10" FROM madrid_' + @YearString + ' WHERE "station" = 28079024 AND MONTH("date") = 8 AND "PM10" IS NOT NULL'
+        EXEC (@stmt)
+        SET @YearValue += 1
+    END
+
+-- Insert averages of PM10 values for each year into MadridYearlyAQ
 INSERT INTO dbo.MadridYearlyAQ
 (
-    [YEAR],
-    [PM10]
+[YEAR], [AVG_PM10]
 )
-VALUES
-(
-    2001,
-    (
-        SELECT AVG("PM10") FROM madrid_2001
-            WHERE 
-                "station" = 28079001
-                AND MONTH("date") = 8
-                AND "PM10" IS NOT NULL
-    )
-)
-GO
-
-SELECT * FROM MadridYearlyAQ
+SELECT  [year], AVG(PM10) AS PM10_AVG FROM TEMPTABLE GROUP BY [year]
+SELECT * FROM dbo.MadridYearlyAQ
+ORDER BY 1
